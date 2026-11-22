@@ -26,19 +26,31 @@ proven-green suite. You cover the happy path *and* the failure modes testers for
 ## Workflow
 1. **Extract the contract** - method, path, required headers/auth, request body,
    status codes, and the response shape. If unknown, ask; don't invent fields.
+   Record the exact source (OpenAPI operation or supplied endpoint sample). Do not
+   combine examples from more than one endpoint or API version.
 2. **Design the case matrix:**
    - Happy path (valid request → 2xx + correct body).
    - Schema validation (assert types/required keys, ideally with Zod).
    - Auth (missing/expired token → 401/403).
    - Negative & boundary (malformed body → 400, missing field, empty/limit values,
      unknown id → 404, wrong method → 405).
+   Only include an expected status or behavior when it is present in the contract;
+   otherwise mark it as an assumption for human confirmation.
 3. **Use `request` fixture / `apiRequestContext`** - no browser. Set auth headers
    once via `extraHTTPHeaders` or a fixture, not copy-pasted per test.
+   Configure `baseURL` in `playwright.config.ts` or pass the full service URL.
+   Generate unique test data and keep tests independent; never depend on execution order.
 4. **Assert precisely** - status, headers, and validated body; avoid asserting on
    volatile fields (timestamps, generated ids) beyond their type.
 5. **List assumptions** - base URL, auth source, seed data - for the engineer.
+   Include setup/cleanup steps and explicitly mark unverified status codes or fields.
+6. **Review before execution** - call out required environment variables, credentials,
+   and resources that must be created. Do not report or imply that the draft passed.
 
 ## Output shape
+Use the contract to replace every placeholder; the code below is an illustrative
+shape, not a claim that `/api/orders`, `ABC`, or status `201` exists.
+
 ```typescript
 import { test, expect } from '@playwright/test';
 import { z } from 'zod';
